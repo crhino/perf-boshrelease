@@ -2,8 +2,11 @@
 name: flamegraph_runner
 templates:
   flamegraph_runner_ctl.erb: bin/flamegraph_runner_ctl
+  flamegraph.sh.erb: bin/flamegraph.sh
 
 packages:
   - flamegraph
+  - perf-server
+  - pid_utils
 
 properties: {}

@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+path=${1}
+graph=${2}
+
+if [ ! -d "$path" ]; then
+  echo "usage: $0 <directory to run script> <output file>"
+  exit 1
+fi
+if [ -z "$graph" ]; then
+  echo "usage: $0 <directory to run script> <output file>"
+  exit 1
+fi
+
+cd $path
+gorouter_pid=$(cat /var/vcap/sys/run/gorouter/gorouter.pid)
+
+perf record -F 99 -p $gorouter_pid -g -o record.perf -- sleep 60
+perf script -i record.perf > out.perf
+
+# Fold stacks
+stackcollapse-perf.pl out.perf > folded.perf
+
+# Generate SVG
+flamegraph.pl folded.perf > $graph

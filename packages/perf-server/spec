@@ -1,0 +1,11 @@
+---
+name: perf-server
+
+dependencies:
+  - golang
+
+files:
+  - github.com/crhino/perf-server/cmd/perf-server/*.go # gosub
+  - github.com/crhino/perf-server/handlers/*.go # gosub
+  - github.com/gorilla/context/*.go # gosub
+  - github.com/gorilla/mux/*.go # gosub
