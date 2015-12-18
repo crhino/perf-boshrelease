@@ -1,0 +1,6 @@
+check process flamegraph_runner
+  with pidfile /var/vcap/sys/run/flamegraph_runner/flamegraph_runner.pid
+  start program "/var/vcap/jobs/flamegraph_runner/bin/flamegraph_runner_ctl start"
+    with timeout 60 seconds
+  stop program "/var/vcap/jobs/flamegraph_runner/bin/flamegraph_runner_ctl stop"
+  group vcap

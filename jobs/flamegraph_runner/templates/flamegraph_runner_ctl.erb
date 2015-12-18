@@ -1,0 +1,57 @@
+#!/bin/bash -e
+
+RUN_DIR=/var/vcap/sys/run/flamegraph_runner
+LOG_DIR=/var/vcap/sys/log/flamegraph_runner
+PIDFILE=$RUN_DIR/flamegraph_runner.pid
+
+mkdir -p /var/vcap/sys/log
+exec > >(tee -a >(logger -p user.info -t vcap.$(basename $0).stdout) | awk -W interactive '{lineWithDate="echo [`date +\"%Y-%m-%d %H:%M:%S%z\"`] \"" $0 "\""; system(lineWithDate)  }' >>/var/vcap/sys/log/$(basename $0).log)
+exec 2> >(tee -a >(logger -p user.error -t vcap.$(basename $0).stderr) | awk -W interactive '{lineWithDate="echo [`date +\"%Y-%m-%d %H:%M:%S%z\"`] \"" $0 "\""; system(lineWithDate)  }' >>/var/vcap/sys/log/$(basename $0).err.log)
+
+
+case $1 in
+
+  start)
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    chown -R vcap:vcap $RUN_DIR
+    chown -R vcap:vcap $LOG_DIR
+
+    export PATH=/var/vcap/packages/flamegraph/flamegraph:$PATH
+
+    echo $$ > $PIDFILE
+
+    cd $RUN_DIR
+
+    echo "Waiting 10 seconds"
+    # wait for gorouter to be up
+    sleep 10
+
+    # Find gorouter PID
+    gorouter_pid=$(cat /var/vcap/sys/run/gorouter/gorouter.pid)
+
+    perf record -F 99 -p $gorouter_pid -g -o record.perf -- sleep 60
+    perf script -i record.perf > out.perf
+
+    # Fold stacks
+    stackcollapse-perf.pl out.perf > folded.perf
+
+    # Generate SVG
+    flamegraph.pl folded.perf > graph.svg
+
+    mv graph.svg $LOG_DIR/graph-$(date +%s).svg.log
+    rm *.perf
+
+    ;;
+
+  stop)
+
+    ;;
+
+  *)
+    echo "Usage: flamegraph_runner_ctl {start|stop}"
+
+    ;;
+
+esac

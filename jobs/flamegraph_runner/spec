@@ -1,0 +1,9 @@
+---
+name: flamegraph_runner
+templates:
+  flamegraph_runner_ctl.erb: bin/flamegraph_runner_ctl
+
+packages:
+  - flamegraph
+
+properties: {}
